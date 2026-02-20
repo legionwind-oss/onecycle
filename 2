@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SIEM 서비스 대시보드 프로토타입</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+:root {
+  --bg: #0a1020;
+  --panel: #111a2f;
+  --panel-soft: #17233f;
+  --line: #243459;
+  --text: #e7eeff;
+  --muted: #9fb2d9;
+  --accent: #4d8dff;
+  --danger: #ff5d73;
+  --warning: #ffb648;
+  --success: #4cd79c;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: 'Inter', system-ui, sans-serif;
+  background: radial-gradient(circle at top, #111d3b 0%, var(--bg) 50%);
+  color: var(--text);
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  min-height: 100vh;
+}
+
+.sidebar {
+  background: rgba(10, 16, 32, 0.95);
+  border-right: 1px solid var(--line);
+  padding: 28px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.logo { font-weight: 700; letter-spacing: .06em; }
+
+.sidebar nav {
+  display: grid;
+  gap: 8px;
+}
+
+.sidebar a {
+  color: var(--muted);
+  text-decoration: none;
+  padding: 10px 12px;
+  border-radius: 10px;
+  transition: background .2s ease, color .2s ease;
+}
+
+.sidebar a.active,
+.sidebar a:hover {
+  background: var(--panel-soft);
+  color: var(--text);
+}
+
+.user-card {
+  margin-top: auto;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px;
+}
+
+.user-card p {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: .85rem;
+}
+
+.main { padding: 26px; }
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+h1 { margin: 0 0 6px; font-size: 1.6rem; }
+.topbar p { margin: 0; color: var(--muted); }
+
+.primary,
+.ghost {
+  border: 0;
+  padding: 11px 16px;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform .2s ease, box-shadow .2s ease, filter .2s ease;
+}
+
+.primary {
+  background: linear-gradient(90deg, #3f83ff, #5f4dff);
+  color: white;
+}
+
+.ghost {
+  background: rgba(77, 141, 255, 0.14);
+  border: 1px solid rgba(120, 166, 255, 0.4);
+  color: #c8dcff;
+}
+
+.primary:hover,
+.ghost:hover,
+.primary.demo-pulse {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 26px rgba(79, 130, 255, .35);
+}
+
+.primary:active,
+.primary.pressed {
+  transform: translateY(0) scale(0.98);
+  filter: brightness(.95);
+}
+
+.interaction-hint {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.interaction-hint p {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: .9rem;
+}
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.card {
+  background: rgba(17, 26, 47, 0.9);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 16px;
+  transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+}
+
+.kpi:hover,
+.kpi.demo-hover {
+  transform: translateY(-4px);
+  border-color: rgba(117, 164, 255, 0.65);
+  box-shadow: 0 12px 30px rgba(26, 55, 128, 0.35);
+}
+
+.kpi span { color: var(--muted); font-size: .9rem; }
+.kpi h2 { margin: 8px 0 6px; font-size: 1.8rem; }
+.kpi p { margin: 0; color: var(--muted); font-size: .85rem; }
+.kpi.danger h2 { color: var(--danger); }
+.kpi.warning h2 { color: var(--warning); }
+.kpi.success h2 { color: var(--success); }
+
+.content-grid {
+  display: grid;
+  grid-template-columns: 1.1fr .9fr;
+  gap: 14px;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.card-header h3 { margin: 0; font-size: 1rem; }
+.card-header span,
+.card-header a { color: var(--muted); font-size: .85rem; text-decoration: none; }
+
+.bars {
+  height: 230px;
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  align-items: end;
+  gap: 8px;
+}
+
+.bars div {
+  border-radius: 8px 8px 4px 4px;
+  height: calc(var(--v) * 1%);
+  background: linear-gradient(180deg, #6ea4ff, #345ecf);
+  transition: filter .2s ease;
+}
+
+.bars div:hover { filter: brightness(1.18); }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .9rem;
+}
+
+th, td {
+  text-align: left;
+  padding: 10px 6px;
+  border-bottom: 1px solid var(--line);
+}
+
+th { color: var(--muted); font-weight: 500; }
+
+.badge {
+  font-size: .75rem;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 999px;
+  transition: transform .2s ease, filter .2s ease;
+}
+
+.badge:hover {
+  transform: scale(1.06);
+  filter: brightness(1.12);
+}
+
+.badge.critical { background: rgba(255, 93, 115, 0.18); color: #ff9aaa; }
+.badge.high { background: rgba(255, 182, 72, 0.2); color: #ffd497; }
+.badge.medium { background: rgba(77, 141, 255, 0.2); color: #a8c6ff; }
+
+@media (max-width: 1100px) {
+  .layout { grid-template-columns: 1fr; }
+  .sidebar { display: none; }
+  .kpi-grid, .content-grid { grid-template-columns: 1fr 1fr; }
+  .interaction-hint { flex-direction: column; align-items: start; }
+}
+
+@media (max-width: 720px) {
+  .kpi-grid, .content-grid { grid-template-columns: 1fr; }
+  .topbar { flex-direction: column; align-items: start; gap: 12px; }
+}
+
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="logo">ONECYCLE SIEM</div>
+      <nav>
+        <a class="active" href="#">통합 현황</a>
+        <a href="#">이벤트 탐지</a>
+        <a href="#">위협 인텔리전스</a>
+        <a href="#">자산 관리</a>
+        <a href="#">알림 센터</a>
+        <a href="#">리포트</a>
+      </nav>
+      <div class="user-card">
+        <strong>보안 운영팀</strong>
+        <p>analyst@onecycle.local</p>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <h1>SIEM 서비스 대시보드</h1>
+          <p>실시간 보안 상태 및 위협 대응 모니터링</p>
+        </div>
+        <button class="primary" id="emergencyButton">긴급 대응 모드</button>
+      </header>
+
+      <section class="interaction-hint card">
+        <div>
+          <strong>미리보기 인터랙션 데모</strong>
+          <p>버튼/카드/배지 호버 효과를 자동으로 순환 표시합니다. 직접 마우스를 올리거나 버튼을 눌러도 즉시 확인할 수 있습니다.</p>
+        </div>
+        <button class="ghost" id="demoToggle" aria-pressed="true">자동 데모 일시정지</button>
+      </section>
+
+      <section class="kpi-grid" id="kpiGrid">
+        <article class="card kpi danger">
+          <span>치명 경보</span>
+          <h2>14</h2>
+          <p>지난 1시간 대비 +3</p>
+        </article>
+        <article class="card kpi">
+          <span>전체 이벤트</span>
+          <h2>1,284,992</h2>
+          <p>실시간 로그 수집 중</p>
+        </article>
+        <article class="card kpi warning">
+          <span>미조치 인시던트</span>
+          <h2>27</h2>
+          <p>평균 처리 시간 42분</p>
+        </article>
+        <article class="card kpi success">
+          <span>자동 차단 성공률</span>
+          <h2>93.8%</h2>
+          <p>정상 범위 유지</p>
+        </article>
+      </section>
+
+      <section class="content-grid">
+        <article class="card chart">
+          <div class="card-header">
+            <h3>24시간 위협 트렌드</h3>
+            <span>UTC+09:00</span>
+          </div>
+          <div class="bars" aria-label="위협 트렌드 바 차트">
+            <div style="--v:34"></div>
+            <div style="--v:48"></div>
+            <div style="--v:27"></div>
+            <div style="--v:59"></div>
+            <div style="--v:76"></div>
+            <div style="--v:65"></div>
+            <div style="--v:82"></div>
+            <div style="--v:51"></div>
+            <div style="--v:39"></div>
+            <div style="--v:60"></div>
+            <div style="--v:42"></div>
+            <div style="--v:70"></div>
+          </div>
+        </article>
+
+        <article class="card table-card">
+          <div class="card-header">
+            <h3>최신 탐지 이벤트</h3>
+            <a href="#">전체 보기</a>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>시간</th>
+                <th>심각도</th>
+                <th>이벤트</th>
+                <th>상태</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>10:31:12</td>
+                <td><span class="badge critical">Critical</span></td>
+                <td>Suspicious PowerShell Execution</td>
+                <td>격리 완료</td>
+              </tr>
+              <tr>
+                <td>10:27:49</td>
+                <td><span class="badge high">High</span></td>
+                <td>Multiple Failed VPN Logins</td>
+                <td>분석 중</td>
+              </tr>
+              <tr>
+                <td>10:19:03</td>
+                <td><span class="badge medium">Medium</span></td>
+                <td>Unusual Data Exfiltration Pattern</td>
+                <td>조치 대기</td>
+              </tr>
+              <tr>
+                <td>10:11:55</td>
+                <td><span class="badge high">High</span></td>
+                <td>Known IOC Domain Access</td>
+                <td>차단 완료</td>
+              </tr>
+            </tbody>
+          </table>
+        </article>
+      </section>
+    </main>
+  </div>
+
+  <script>
+const kpiCards = Array.from(document.querySelectorAll('#kpiGrid .kpi'));
+const emergencyButton = document.getElementById('emergencyButton');
+const demoToggle = document.getElementById('demoToggle');
+
+let demoTimer = null;
+let demoIndex = 0;
+let demoRunning = true;
+
+const clearDemoClasses = () => {
+  kpiCards.forEach((card) => card.classList.remove('demo-hover'));
+  emergencyButton.classList.remove('demo-pulse');
+};
+
+const runDemoStep = () => {
+  clearDemoClasses();
+  kpiCards[demoIndex % kpiCards.length].classList.add('demo-hover');
+  if (demoIndex % 2 === 0) {
+    emergencyButton.classList.add('demo-pulse');
+  }
+  demoIndex += 1;
+};
+
+const startDemo = () => {
+  if (demoTimer) return;
+  runDemoStep();
+  demoTimer = setInterval(runDemoStep, 1400);
+  demoRunning = true;
+  demoToggle.textContent = '자동 데모 일시정지';
+  demoToggle.setAttribute('aria-pressed', 'true');
+};
+
+const stopDemo = () => {
+  clearInterval(demoTimer);
+  demoTimer = null;
+  clearDemoClasses();
+  demoRunning = false;
+  demoToggle.textContent = '자동 데모 다시 시작';
+  demoToggle.setAttribute('aria-pressed', 'false');
+};
+
+demoToggle.addEventListener('click', () => {
+  if (demoRunning) {
+    stopDemo();
+  } else {
+    startDemo();
+  }
+});
+
+emergencyButton.addEventListener('click', () => {
+  emergencyButton.classList.add('pressed');
+  setTimeout(() => emergencyButton.classList.remove('pressed'), 220);
+});
+
+startDemo();
+
+  </script>
+</body>
+</html>
