@@ -1,0 +1,17 @@
+{
+  "name": "onecycle-siem-prototype",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0 --port 4173 --strictPort",
+    "build": "vite build",
+    "preview": "vite preview --host 0.0.0.0 --port 4173 --strictPort",
+    "serve:static": "python3 -m http.server 4173",
+    "start:local": "./run-local.sh 4173",
+    "start:local:loopback": "HOST=127.0.0.1 ./run-local.sh 4173"
+  },
+  "devDependencies": {
+    "vite": "^5.4.10"
+  }
+}
